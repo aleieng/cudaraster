@@ -175,7 +175,7 @@ __device__ __inline__ void initTileZMax(U32& tileZMax, bool& tileZUpd, volatile 
 template <U32 RenderModeFlags>
 __device__ __inline__ void updateTileZMax(U32& tileZMax, bool& tileZUpd, volatile U32* tileDepth, volatile U32* temp)
 {
-    if ((RenderModeFlags & RenderModeFlag_EnableDepth) != 0 && __any(tileZUpd))
+    if ((RenderModeFlags & RenderModeFlag_EnableDepth) != 0 && __any_sync(0xFFFFFFFF, tileZUpd))
     {
         U32 z = ::max(tileDepth[threadIdx.x], tileDepth[threadIdx.x + 32]);
         temp[threadIdx.x + 16] = z;
@@ -495,7 +495,7 @@ __device__ __inline__ void executeROP_SingleSample(
 
     #if (CR_PROFILING_MODE == ProfilingMode_Counters)
         CR_COUNT(FineBlendRounds, 0, 1);
-        for (int i = 0; __any(i < rounds); i++)
+        for (int i = 0; __any_sync(0xFFFFFFFF, i < rounds); i++)
             CR_COUNT(FineBlendRounds, 1, 0);
     #endif
 }
@@ -638,7 +638,7 @@ __device__ __inline__ void fineRasterImpl_SingleSample(void)
                     fragWrite += scan32_total(temp);
 
                     // queue non-empty triangles
-                    U32 goodMask = __ballot(pop != 0);
+                    U32 goodMask = __ballot_sync(0xFFFFFFFF, pop != 0);
                     if (pop != 0)
                     {
                         int idx = (triWrite + __popc(goodMask & getLaneMaskLt())) & 63;
@@ -669,7 +669,7 @@ __device__ __inline__ void fineRasterImpl_SingleSample(void)
             }
 
             int ropLaneIdx = __popc(ropLaneMask);
-            U32 boundaryMask = __ballot(temp[ropLaneIdx + 16]);
+            U32 boundaryMask = __ballot_sync(0xFFFFFFFF, temp[ropLaneIdx + 16]);
 
             // distribute fragments
             CR_TIMER_OUT_DEP(FineFragmentDistr, boundaryMask);
@@ -847,10 +847,10 @@ __device__ __inline__ U32 executeROP_MultiSample(
     }
 
     #if (CR_PROFILING_MODE == ProfilingMode_Counters)
-        if (__any(rounds != 0))
+        if (__any_sync(0xFFFFFFFF, rounds != 0))
         {
             CR_COUNT(FineBlendRounds, 1, 1);
-            for (int i = 1; __any(i < rounds); i++)
+            for (int i = 1; __any_sync(0xFFFFFFFF, i < rounds); i++)
                 CR_COUNT(FineBlendRounds, 1, 0);
         }
     #endif
@@ -987,7 +987,7 @@ __device__ __inline__ void fineRasterImpl_MultiSample(void)
                     fragWrite += scan32_total(temp);
 
                     // queue non-empty triangles
-                    U32 goodMask = __ballot(pop != 0);
+                    U32 goodMask = __ballot_sync(0xFFFFFFFF, pop != 0);
                     if (pop != 0)
                     {
                         int idx = (triWrite + __popc(goodMask & getLaneMaskLt())) & 63;
@@ -1018,7 +1018,7 @@ __device__ __inline__ void fineRasterImpl_MultiSample(void)
             }
 
             int ropLaneIdx = __popc(ropLaneMask);
-            U32 boundaryMask = __ballot(temp[ropLaneIdx + 16]);
+            U32 boundaryMask = __ballot_sync(0xFFFFFFFF, temp[ropLaneIdx + 16]);
 
             // distribute fragments
             CR_TIMER_OUT_DEP(FineFragmentDistr, boundaryMask);

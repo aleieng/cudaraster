@@ -282,6 +282,11 @@ void CudaCompiler::staticInit(void)
         {
             String prog = sprintf("%c:\\%s", drive, (progX86 == 0) ? "Program Files" : "Program Files (x86)");
 		    potentialCudaPaths.add(prog + sprintf("\\NVIDIA GPU Computing Toolkit\\CUDA\\v%.1f", driverVersion));
+            potentialVSPaths.add(prog + "\\Microsoft Visual Studio\\2019\\Professional");
+            potentialVSPaths.add(prog + "\\Microsoft Visual Studio\\2017\\Professional");
+            potentialVSPaths.add(prog + "\\Microsoft Visual Studio 14.0");
+            potentialVSPaths.add(prog + "\\Microsoft Visual Studio 12.0");
+            potentialVSPaths.add(prog + "\\Microsoft Visual Studio 11.0");
             potentialVSPaths.add(prog + "\\Microsoft Visual Studio 10.0");
             potentialVSPaths.add(prog + "\\Microsoft Visual Studio 9.0");
             potentialVSPaths.add(prog + "\\Microsoft Visual Studio 8");
@@ -293,8 +298,9 @@ void CudaCompiler::staticInit(void)
 
     String pathEnv      = queryEnv("PATH");
     String includeEnv   = queryEnv("INCLUDE");
-    String cudaBinEnv   = queryEnv("CUDA_BIN_PATH");
-    String cudaIncEnv   = queryEnv("CUDA_INC_PATH");
+    String cudaEnv = queryEnv("CUDA_PATH");
+    String cudaBinEnv   = queryEnv("CUDA_PATH") + "\\bin";
+    String cudaIncEnv   = queryEnv("CUDA_INC_PATH") + "\\include";
 
     // Find CUDA binary path.
 

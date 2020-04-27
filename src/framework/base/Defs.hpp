@@ -222,6 +222,7 @@ FW_SPECIALIZE_MINMAX(, F64, ::fmin(a, b), ::fmax(a, b))
 
 #ifndef FW_DO_NOT_OVERRIDE_NEW_DELETE
 #if !FW_CUDA
+#pragma warning( disable : 4595 )
 
 inline void*    operator new        (size_t size)       { return FW::malloc(size); }
 inline void*    operator new[]      (size_t size)       { return FW::malloc(size); }

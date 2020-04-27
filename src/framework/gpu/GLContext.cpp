@@ -722,9 +722,10 @@ void GLContext::staticInit(void)
 
     // Determine whether stereo is available.
 
-    Config stereoConfig;
-    stereoConfig.isStereo = true;
-    s_stereoAvailable = s_headless->choosePixelFormat(formatIdx, s_shareHDC, stereoConfig);
+    // seems stereo bit not supported by the latest driver
+    // Config stereoConfig;
+    // stereoConfig.isStereo = true;
+    s_stereoAvailable = false; // s_headless->choosePixelFormat(formatIdx, s_shareHDC, stereoConfig);
 }
 
 //------------------------------------------------------------------------
@@ -808,7 +809,7 @@ bool GLContext::choosePixelFormat(int& formatIdx, HDC hdc, const Config& config)
     reqs.add(Vec2i(WGL_PIXEL_TYPE_ARB,      WGL_TYPE_RGBA_ARB));
     reqs.add(Vec2i(WGL_DEPTH_BITS_ARB,      24));
     reqs.add(Vec2i(WGL_STENCIL_BITS_ARB,    8));
-    reqs.add(Vec2i(WGL_STEREO_ARB,          (config.isStereo) ? 1 : 0));
+//    reqs.add(Vec2i(WGL_STEREO_ARB,          (config.isStereo) ? 1 : 0));
 
     if (config.numSamples > 1)
         reqs.add(Vec2i(WGL_SAMPLES_ARB, config.numSamples)); // WGL_ARB_multisample
@@ -832,11 +833,11 @@ bool GLContext::choosePixelFormat(int& formatIdx, HDC hdc, const Config& config)
     if (!GL_FUNC_AVAILABLE(wglChoosePixelFormatARB))
         fail("wglChoosePixelFormatARB() not available!");
 
-    UINT numFormats = 0;
-    if (!wglChoosePixelFormatARB(hdc, &reqs[0].x, NULL, 0, NULL, &numFormats))
-        failWin32Error("wglChoosePixelFormatARB");
-    if (numFormats == 0)
-        return false;
+    UINT numFormats = 256;
+    //if (!wglChoosePixelFormatARB(hdc, &reqs[0].x, NULL, 0, NULL, &numFormats))
+    //    failWin32Error("wglChoosePixelFormatARB");
+    //if (numFormats == 0)
+    //    return false;
 
     Array<int> formats(NULL, numFormats);
     if (!wglChoosePixelFormatARB(hdc, &reqs[0].x, NULL, numFormats, formats.getPtr(), &numFormats))

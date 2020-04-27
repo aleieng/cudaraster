@@ -109,11 +109,11 @@ __device__ __inline__ void binRasterImpl(void)
 
                 CR_TIMER_IN(BinCompactSubtri);
                 // cumulative sum of subtriangles within each warp
-                U32 myIdx = __popc(__ballot(num & 1) & getLaneMaskLt());
-                if (__any(num > 1))
+                U32 myIdx = __popc(__ballot_sync(0xFFFFFFFF, num & 1) & getLaneMaskLt());
+                if (__any_sync(0xFFFFFFFF, num > 1))
                 {
-                    myIdx += __popc(__ballot(num & 2) & getLaneMaskLt()) * 2;
-                    myIdx += __popc(__ballot(num & 4) & getLaneMaskLt()) * 4;
+                    myIdx += __popc(__ballot_sync(0xFFFFFFFF, num & 2) & getLaneMaskLt()) * 2;
+                    myIdx += __popc(__ballot_sync(0xFFFFFFFF, num & 4) & getLaneMaskLt()) * 4;
                 }
                 s_broadcast[threadIdx.y + 16] = myIdx + num;
                 __syncthreads();
@@ -238,7 +238,7 @@ __device__ __inline__ void binRasterImpl(void)
 
                 U32 bit = 1 << threadIdx.x;
                 bool multi = (hix != lox || hiy != loy);
-                if (!__any(multi))
+                if (!__any_sync(0xFFFFFFFF, multi))
                 {
                     CR_COUNT(BinTriSinglePath, 100, 0);
                     int binIdx = lox + c_crParams.widthBins * loy;
@@ -250,7 +250,7 @@ __device__ __inline__ void binRasterImpl(void)
                         s_broadcast[threadIdx.y + 16] = binIdx;
                         int winner = s_broadcast[threadIdx.y + 16];
                         won = (binIdx == winner);
-                        U32 mask = __ballot(won);
+                        U32 mask = __ballot_sync(0xFFFFFFFF, won);
                         s_outMask[threadIdx.y][winner] = mask;
                     } while (!won);
                     CR_TIMER_OUT_DEP(BinRasterAtomic, won);
@@ -258,7 +258,7 @@ __device__ __inline__ void binRasterImpl(void)
                 } else
                 {
                     bool complex = (hix > lox+1 || hiy > loy+1);
-                    if (!__any(complex))
+                    if (!__any_sync(0xFFFFFFFF, complex))
                     {
                         CR_COUNT(BinTriFastPath, 100, 0);
                         int binIdx = lox + c_crParams.widthBins * loy;
@@ -338,7 +338,7 @@ __device__ __inline__ void binRasterImpl(void)
                 int ofs = s_outOfs[thrInBlock];
                 if (((ofs - 1) >> CR_BIN_SEG_LOG2) != (((ofs - 1) + total) >> CR_BIN_SEG_LOG2))
                 {
-                    U32 mask = __ballot(true);
+                    U32 mask = __ballot_sync(0xFFFFFFFF, true);
                     overIndex = __popc(mask & getLaneMaskLt());
                     if (overIndex == 0)
                         s_broadcast[threadIdx.y + 16] = atomicAdd((U32*)&s_overTotal, __popc(mask));
